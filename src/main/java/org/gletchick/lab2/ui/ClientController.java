@@ -6,17 +6,24 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.gletchick.lab2.db.Client;
+import org.gletchick.lab2.db.ClientRepository;
 import org.gletchick.lab2.db.DbManager;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientController {
     @FXML private TableView<Client> clientTable;
     @FXML private TableColumn<Client, String> colSurname, colName, colPatronymic, colPhone;
-    @FXML private TextField txtSurname, txtName, txtPatronymic, txtPhone;
-    @FXML private Label lblCount;
 
+    @FXML private TextField txtSurname, txtName, txtPatronymic, txtPhone;
+    private ObservableList<Client> manualClients = FXCollections.observableArrayList();
     private final DbManager dbManager = new DbManager();
+
+    private ObservableList<Client> clientsInMemory = FXCollections.observableArrayList();
+    private List<Client> pendingInserts = new ArrayList<>();
+    private final ClientRepository repository = new ClientRepository();
 
     @FXML
     public void initialize() {
@@ -25,49 +32,43 @@ public class ClientController {
         colPatronymic.setCellValueFactory(new PropertyValueFactory<>("patronymic"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
 
-        handleRefresh();
+        clientTable.setItems(repository.getAllClients());
+    }
+
+    @FXML
+    private void handleAddLocal() {
+        Client c = new Client(txtPhone.getText(), txtName.getText(), txtSurname.getText(), txtPatronymic.getText());
+        repository.addLocally(c);
+
+        txtPhone.clear(); txtName.clear(); txtSurname.clear(); txtPatronymic.clear();
+        showInfo("Локальное добавление", "Запись добавлена в память. Не забудьте сохранить в БД!");
+    }
+
+    @FXML
+    private void handleSaveToDb() {
+        try {
+            repository.saveChanges();
+            showInfo("Успех", "Данные сохранены в БД");
+        } catch (SQLException e) {
+            showError("Ошибка", e.getMessage());
+        }
     }
 
     @FXML
     private void handleRefresh() {
         try {
-            ObservableList<Client> clients = FXCollections.observableArrayList(dbManager.readTableClients());
-            clientTable.setItems(clients);
-
-            int count = dbManager.getClientsCount();
-            lblCount.setText("Общее число клиентов: " + count);
+            repository.loadFromDb();
         } catch (SQLException e) {
-            showError("Ошибка загрузки", e.getMessage());
+            showError("Ошибка", e.getMessage());
         }
     }
 
-    @FXML
-    private void handleAddClient() {
-        Client newClient = new Client(
-                txtPhone.getText(),
-                txtName.getText(),
-                txtSurname.getText(),
-                txtPatronymic.getText()
-        );
-
-        try {
-            int newId = dbManager.addClientViaProcedure(newClient);
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Успех");
-            alert.setHeaderText(null);
-            alert.setContentText("Клиент добавлен! Присвоен ID: " + newId);
-            alert.showAndWait();
-
-            handleRefresh();
-            clearFields();
-        } catch (SQLException e) {
-            showError("Ошибка добавления", e.getMessage());
-        }
-    }
-
-    private void clearFields() {
-        txtPhone.clear(); txtName.clear(); txtSurname.clear(); txtPatronymic.clear();
+    private void showInfo(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     private void showError(String title, String content) {
