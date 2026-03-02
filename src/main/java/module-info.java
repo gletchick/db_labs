@@ -12,4 +12,6 @@ module org.gletchick.lab2 {
 
     exports org.gletchick.lab2;
     exports org.gletchick.lab2.ui;
+    opens org.gletchick.lab2.model to javafx.base;
+    opens org.gletchick.lab2.repository to javafx.base;
 }
