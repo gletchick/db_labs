@@ -16,7 +16,6 @@ public class EntityState<T> {
         this.entity = entity;
         this.state = state;
 
-        // Создаем независимую копию данных
         if (entity instanceof Client) {
             this.originalEntity = (T) new Client((Client) entity);
         } else if (entity instanceof Ticket) {
@@ -26,10 +25,8 @@ public class EntityState<T> {
         }
     }
 
-    // Метод отката (аналог RejectChanges)
     public void rejectChanges() {
         if (state == RowState.MODIFIED || state == RowState.DELETED) {
-            // Возвращаем данные из оригинала в текущую сущность
             if (entity instanceof Client) {
                 copyClientData((Client) originalEntity, (Client) entity);
             } else if (entity instanceof Ticket) {

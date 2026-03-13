@@ -3,160 +3,110 @@ package org.gletchick.lab2.ui;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import org.gletchick.lab2.model.*;
+import org.gletchick.lab2.model.Client;
+import org.gletchick.lab2.model.EntityState;
 import org.gletchick.lab2.repository.ClientRepository;
 
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class ClientController {
-    @FXML private TableView<EntityState<Client>> clientTable;
-    @FXML private TableColumn<EntityState<Client>, String> colSurname, colName, colPatronymic, colPhone, colState;
-    @FXML private TextField txtSurname, txtName, txtPatronymic, txtPhone;
-    @FXML private ListView<String> hierarchyListView;
+    @FXML private TableView<EntityState<Client>> clientTable1;
+    @FXML private TableColumn<EntityState<Client>, String> colComputed, col1Surname, col1Name, col1Phone;
 
-    // Используем репозиторий клиента, который теперь умеет подтягивать и билеты
+    @FXML private TableView<EntityState<Client>> clientTable2;
+    @FXML private TableColumn<EntityState<Client>, String> col2Surname, col2Name, col2Phone;
+
+    @FXML private ComboBox<String> comboFilterSurname;
+    @FXML private ComboBox<String> comboFilterPhone;
+
     private final ClientRepository repository = new ClientRepository();
+    private FilteredList<EntityState<Client>> filteredData;
 
     @FXML
     public void initialize() {
-        // Настройка колонок таблицы
-        colSurname.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getSurname()));
-        colName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getName()));
-        colPatronymic.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getPatronymic()));
-        colPhone.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getPhone()));
-        colState.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getState().toString()));
+        setupColumns();
 
-        clientTable.setItems(repository.getClientStates());
+        filteredData = new FilteredList<>(repository.getClientStates(), p -> true);
 
-        // При выборе клиента в таблице — заполняем текстовые поля для редактирования
-        clientTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                fillFields(newVal.getEntity());
-            }
+        comboFilterSurname.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+        comboFilterPhone.valueProperty().addListener((obs, oldVal, newVal) -> updateFilter());
+
+        SortedList<EntityState<Client>> sortedDataByName = new SortedList<>(filteredData);
+        sortedDataByName.setComparator(Comparator.comparing(state -> state.getEntity().getName()));
+        clientTable1.setItems(sortedDataByName);
+
+        SortedList<EntityState<Client>> sortedDataByPhone = new SortedList<>(filteredData);
+        sortedDataByPhone.setComparator(Comparator.comparing(state -> state.getEntity().getPhone()));
+        clientTable2.setItems(sortedDataByPhone);
+    }
+
+    private void setupColumns() {
+        colComputed.setCellValueFactory(data -> {
+            Client c = data.getValue().getEntity();
+            String initials = "";
+            if (c.getName() != null && !c.getName().isEmpty()) initials += c.getName().charAt(0) + ".";
+            if (c.getPatronymic() != null && !c.getPatronymic().isEmpty()) initials += c.getPatronymic().charAt(0) + ".";
+            return new SimpleStringProperty(c.getSurname() + " " + initials);
+        });
+
+        col1Surname.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getSurname()));
+        col1Name.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getName()));
+        col1Phone.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getPhone()));
+
+        col2Surname.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getSurname()));
+        col2Name.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getName()));
+        col2Phone.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEntity().getPhone()));
+    }
+
+    private void updateFilter() {
+        String filterSurname = comboFilterSurname.getValue();
+        String filterPhone = comboFilterPhone.getValue();
+
+        filteredData.setPredicate(state -> {
+            Client c = state.getEntity();
+
+            boolean matchesSurname = (filterSurname == null || filterSurname.equals("Все") || c.getSurname().equals(filterSurname));
+            boolean matchesPhone = (filterPhone == null || filterPhone.equals("Все") || c.getPhone().equals(filterPhone));
+
+            return matchesSurname && matchesPhone;
         });
     }
 
-    // --- 1. Загрузка данных ---
+    @FXML
+    private void handleClearFilters() {
+        comboFilterSurname.setValue("Все");
+        comboFilterPhone.setValue("Все");
+    }
+
     @FXML
     private void handleRefresh() {
         try {
             repository.loadFromDb();
-            showInfo("Успех", "Данные синхронизированы с БД");
+            populateFilterComboBoxes();
         } catch (SQLException e) {
-            showError("Ошибка загрузки", e.getMessage());
+            new Alert(Alert.AlertType.ERROR, "Ошибка загрузки: " + e.getMessage(), ButtonType.OK).showAndWait();
         }
     }
 
-    @FXML
-    private void handleAddLocal() {
-        Client c = new Client(0, txtPhone.getText(), txtName.getText(), txtSurname.getText(), txtPatronymic.getText());
-        repository.addLocally(c);
-        clearFields();
-    }
+    private void populateFilterComboBoxes() {
+        ObservableList<String> surnames = FXCollections.observableArrayList("Все");
+        surnames.addAll(repository.getClientStates().stream()
+                .map(state -> state.getEntity().getSurname())
+                .distinct()
+                .collect(Collectors.toList()));
+        comboFilterSurname.setItems(surnames);
 
-    @FXML
-    private void handleEditLocal() {
-        EntityState<Client> selected = clientTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            Client c = selected.getEntity();
-            c.setSurname(txtSurname.getText());
-            c.setName(txtName.getText());
-            c.setPatronymic(txtPatronymic.getText());
-            c.setPhone(txtPhone.getText());
-
-            if (selected.getState() == RowState.UNCHANGED) {
-                selected.setState(RowState.MODIFIED);
-            }
-            clientTable.refresh();
-        }
-    }
-
-    @FXML
-    private void handleDeleteLocal() {
-        EntityState<Client> selected = clientTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            repository.markDeleted(selected);
-            clientTable.refresh();
-        }
-    }
-
-    @FXML
-    private void handleCancelEdit() {
-        EntityState<Client> selected = clientTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            repository.rejectChanges(selected);
-            clientTable.refresh();
-            fillFields(selected.getEntity());
-        }
-    }
-
-    // --- 3. Иерархическое отображение (Master-Detail) ---
-    @FXML
-    private void handleShowHierarchy() {
-        ObservableList<String> items = FXCollections.observableArrayList();
-
-        for (EntityState<Client> clientState : repository.getClientStates()) {
-            if (clientState.getState() == RowState.DELETED) continue;
-
-            Client c = clientState.getEntity();
-            items.add("КЛИЕНТ: " + c.getSurname() + " " + c.getName() + " [ID: " + c.getId() + "]");
-
-            // ИСПОЛЬЗУЕМ РЕАЛЬНЫЙ ID
-            int clientId = c.getId();
-
-            List<Ticket> clientTickets = repository.getTicketsByClientId(clientId);
-
-            if (clientTickets.isEmpty()) {
-                items.add("   └─ (Билеты не найдены)");
-            } else {
-                for (Ticket t : clientTickets) {
-                    items.add("   └─ Билет #" + t.getId() + ": Сеанс " + t.getIdSession() +
-                            " | Место: " + t.getIdSeat() + " | Статус: " + t.getStatus());
-                }
-            }
-        }
-        hierarchyListView.setItems(items);
-    }
-
-    // --- 4. Сохранение всех изменений в БД ---
-    @FXML
-    private void handleSaveToDb() {
-        try {
-            repository.saveChanges();
-            clientTable.refresh(); // Гарантируем, что статусы в колонке State обновятся на UNCHANGED
-            showInfo("Успех", "Все изменения зафиксированы в БД. Новые ID получены.");
-        } catch (SQLException e) {
-            showError("Ошибка сохранения", e.getMessage());
-        }
-    }
-
-    // Вспомогательные методы
-    private void fillFields(Client c) {
-        txtSurname.setText(c.getSurname());
-        txtName.setText(c.getName());
-        txtPatronymic.setText(c.getPatronymic());
-        txtPhone.setText(c.getPhone());
-    }
-
-    private void clearFields() {
-        txtSurname.clear(); txtName.clear(); txtPatronymic.clear(); txtPhone.clear();
-    }
-
-    private void showInfo(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showError(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setContentText(content);
-        alert.showAndWait();
+        ObservableList<String> phones = FXCollections.observableArrayList("Все");
+        phones.addAll(repository.getClientStates().stream()
+                .map(state -> state.getEntity().getPhone())
+                .distinct()
+                .collect(Collectors.toList()));
+        comboFilterPhone.setItems(phones);
     }
 }
