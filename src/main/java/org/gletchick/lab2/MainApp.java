@@ -7,14 +7,16 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application {
     @Override
-    public void start(Stage stage) throws Exception {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("ui/client_view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 502, 600);
-        stage.setScene(scene);
-        stage.show();
+    public void start(Stage primaryStage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/gletchick/lab2/ui/MainView.fxml"));
+        Scene scene = new Scene(loader.load());
+
+        primaryStage.setTitle("Система управления театром");
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }

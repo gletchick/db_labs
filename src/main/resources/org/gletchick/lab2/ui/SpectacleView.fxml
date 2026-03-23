@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.gletchick.lab2.controller.SpectacleController">
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="5.0" style="-fx-border-color: #ccc; -fx-padding: 5;">
+        <Button fx:id="btnFirst" text="|&lt;" />
+        <Button fx:id="btnPrev" text="&lt;" />
+        <TextField fx:id="txtCurrentIndex" prefWidth="40.0" text="1" />
+        <Label fx:id="lblTotalCount" text="для 0" />
+        <Button fx:id="btnNext" text="&gt;" />
+        <Button fx:id="btnLast" text="&gt;|" />
+        <Separator orientation="VERTICAL" />
+        <Button fx:id="btnAdd" onAction="#handleAdd" style="-fx-text-fill: green;" text="✚" />
+        <Button fx:id="btnDelete" onAction="#handleDelete" style="-fx-text-fill: red;" text="✖" />
+        <Button fx:id="btnSave" onAction="#saveChanges" style="-fx-text-fill: blue;" text="Сохранить" />
+    </HBox>
+
+    <Label fx:id="lblTitle" alignment="CENTER" maxWidth="1.7976931348623157E308" text="Список клиентов" textFill="#0066cc">
+        <Font name="System Bold" size="18.0" />
+    </Label>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+        </columnResizePolicy>
+    </TableView>
+</VBox>
