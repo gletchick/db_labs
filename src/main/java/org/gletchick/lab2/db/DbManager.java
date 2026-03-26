@@ -3,6 +3,7 @@ package org.gletchick.lab2.db;
 import org.gletchick.lab2.model.*;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -366,4 +367,71 @@ public class DbManager {
         }
     }
 
+    public List<Seat> readSeatsByHall(int idHall) throws SQLException {
+        List<Seat> seats = new ArrayList<>();
+        // Используем константу для SQL запроса, если они у вас вынесены
+        String query = "SELECT * FROM seats WHERE id_hall = ?";
+
+        try (PreparedStatement pstmt = getNewConnection().prepareStatement(query)) {
+            pstmt.setInt(1, idHall);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                seats.add(new Seat(
+                        rs.getInt("id_seat"),
+                        rs.getInt("id_hall"),
+                        rs.getInt("row_number"),
+                        rs.getInt("seat_number")
+                ));
+            }
+        }
+        return seats;
+    }
+
+    /**
+     * Получает список сеансов, отфильтрованный по конкретному спектаклю.
+     * Реализует связь Master (Spectacle) -> Detail (Session).
+     */
+    public List<Session> readSessionsBySpectacle(int specId) throws SQLException {
+        List<Session> sessions = new ArrayList<>();
+        String query = "SELECT * FROM sessions WHERE id_spectacle = ?";
+
+        try (PreparedStatement pstmt = getNewConnection().prepareStatement(query)) {
+            pstmt.setInt(1, specId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                sessions.add(new Session(
+                        rs.getInt("id_session"),
+                        rs.getInt("id_spectacle"),
+                        rs.getInt("id_hall"),
+                        rs.getTimestamp("date_time_start").toLocalDateTime()
+                ));
+            }
+        }
+        return sessions;
+    }
+
+    /**
+     * Получает список билетов для конкретного сеанса.
+     * Реализует связь Master (Session) -> Detail (Ticket).
+     */
+    public List<Ticket> readTicketsBySession(int sessionId) throws SQLException {
+        List<Ticket> tickets = new ArrayList<>();
+        String query = "SELECT * FROM tickets WHERE id_session = ?";
+
+        try (PreparedStatement pstmt = getNewConnection().prepareStatement(query)) {
+            pstmt.setInt(1, sessionId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                tickets.add(new Ticket(
+                        rs.getInt("id_ticket"),
+                        rs.getInt("id_session"),
+                        rs.getInt("id_seat"),
+                        rs.getInt("id_client"),
+                        rs.getDouble("price"),
+                        rs.getString("status")
+                ));
+            }
+        }
+        return tickets;
+    }
 }

@@ -165,4 +165,9 @@ public abstract class AbstractTableController<T> {
                     updateFooter(tableView.getItems().size());
                 });
     }
+
+    @FXML
+    protected void cancelChanges() {
+        loadData();
+    }
 }
