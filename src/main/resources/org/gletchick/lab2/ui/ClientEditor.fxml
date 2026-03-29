@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10.0" prefWidth="600.0" prefHeight="450.0"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.gletchick.lab2.ui.ClientEditorController">
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+    </padding>
+
+    <Label text="Управление клиентами" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+
+    <TableView fx:id="clientsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
+            <TableColumn fx:id="surnameColumn" text="Фамилия" prefWidth="120" />
+            <TableColumn fx:id="nameColumn" text="Имя" prefWidth="100" />
+            <TableColumn fx:id="patronymicColumn" text="Отчество" prefWidth="120" />
+            <TableColumn fx:id="phoneColumn" text="Телефон" prefWidth="120" />
+        </columns>
+    </TableView>
+
+    <Separator />
+
+    <GridPane hgap="10.0" vgap="10.0">
+        <columnConstraints>
+            <ColumnConstraints minWidth="80" />
+            <ColumnConstraints hgrow="ALWAYS" />
+            <ColumnConstraints minWidth="80" />
+            <ColumnConstraints hgrow="ALWAYS" />
+        </columnConstraints>
+
+        <Label text="Фамилия:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="surnameField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+        <Label text="Имя:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+        <TextField fx:id="nameField" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+        <Label text="Отчество:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <TextField fx:id="patronymicField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+        <Label text="Телефон:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+        <TextField fx:id="phoneField" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+    </GridPane>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="Добавить клиента" prefWidth="150.0"
+                style="-fx-base: #3498db; -fx-text-fill: white;" />
+    </HBox>
+</VBox>
