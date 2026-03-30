@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" name="ClientCertificate" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+    <parameter name="p_fio" class="java.lang.String"/>
+    <detail>
+        <band height="200">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["СПРАВКА"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="50" width="555" height="100"/>
+                <textElement>
+                    <font size="12"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Данная справка подтверждает, что " + $P{p_fio} + " является зарегистрированным клиентом нашего театра."]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+</jasperReport>

@@ -3,232 +3,145 @@ package org.gletchick.lab2.controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import org.gletchick.lab2.db.DbManager;
-import org.gletchick.lab2.model.*;
-import org.gletchick.lab2.ui.ClientEditorController;
+import javafx.scene.control.cell.PropertyValueFactory;
+import org.gletchick.lab2.context.TicketSystemContext;
+import org.gletchick.lab2.model.Ticket;
 
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainController {
-    private static final String CLIENT_EDITOR_FXML = "/org/gletchick/lab2/ui/ClientEditor.fxml";
-    private static final String TICKET_LIST_FXML = "/org/gletchick/lab2/ui/TicketListView.fxml";
 
-    private static final String EDITOR_TITLE = "Редактор клиентов";
-    private static final String STATUS_SOLD = "Куплен";
-    private static final String STATUS_RESERVED = "Забронирован";
-    private static final int DEFAULT_ID = 0;
+    @FXML private TableView<Ticket> ticketsTable;
+    @FXML private TableColumn<Ticket, Integer> colId;
+    @FXML private TableColumn<Ticket, Integer> colSession;
+    @FXML private TableColumn<Ticket, Integer> colSeat;
+    @FXML private TableColumn<Ticket, Integer> colClient;
+    @FXML private TableColumn<Ticket, Double> colPrice;
+    @FXML private TableColumn<Ticket, String> colStatus;
 
-    @FXML
-    private ComboBox<Client> clientComboBox;
-    @FXML
-    private ComboBox<Session> sessionComboBox;
-    @FXML
-    private ComboBox<Seat> seatComboBox;
-    @FXML
-    private ComboBox<String> statusComboBox;
-    @FXML
-    private TextField priceField;
-    @FXML
-    private Button openEditorButton;
-    @FXML
-    private Button buyTicketButton;
+    @FXML private TextField fldSession;
+    @FXML private TextField fldSeat;
+    @FXML private TextField fldClient;
+    @FXML private TextField fldPrice;
+    @FXML private TextField fldStatus;
+    @FXML private TextField fldFilterPrice;
+    @FXML private TextArea txtAreaOutput;
 
-    private final DbManager dbManager = new DbManager();
-    private final ObservableList<Client> clientsList = FXCollections.observableArrayList();
-    private final ObservableList<Session> sessionsList = FXCollections.observableArrayList();
-    private final ObservableList<Seat> seatsList = FXCollections.observableArrayList();
+    private TicketSystemContext context;
+    private ObservableList<Ticket> observableTickets;
 
-
-    @FXML
-    private void handleShowAllTickets() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(TICKET_LIST_FXML));
-            Parent root = loader.load();
-
-            Stage stage = new Stage();
-            stage.setTitle("Список всех билетов");
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final String DEFAULT_NEW_TICKET_STATUS = "AVAILABLE";
+    private static final int ID_PLACEHOLDER = 0;
 
     @FXML
     public void initialize() {
-        setupComboBoxConverters();
+        context = new TicketSystemContext();
 
-        clientComboBox.setItems(clientsList);
-        sessionComboBox.setItems(sessionsList);
-        seatComboBox.setItems(seatsList);
-        statusComboBox.setItems(FXCollections.observableArrayList(STATUS_SOLD, STATUS_RESERVED));
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colSession.setCellValueFactory(new PropertyValueFactory<>("idSession"));
+        colSeat.setCellValueFactory(new PropertyValueFactory<>("idSeat"));
+        colClient.setCellValueFactory(new PropertyValueFactory<>("idClient"));
+        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        loadClients();
-        loadSessions();
+        refreshTableData();
 
-        openEditorButton.setOnAction(event -> handleOpenEditor());
-        buyTicketButton.setOnAction(event -> handleBuyTicket());
-
-        // Слушатель: при смене сеанса меняем список мест под нужный зал
-        sessionComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                loadSeatsForHall(newVal.getIdHall());
-            } else {
-                seatsList.clear();
+        ticketsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                fldSession.setText(String.valueOf(newSelection.getIdSession()));
+                fldSeat.setText(String.valueOf(newSelection.getIdSeat()));
+                fldClient.setText(String.valueOf(newSelection.getIdClient()));
+                fldPrice.setText(String.valueOf(newSelection.getPrice()));
+                fldStatus.setText(newSelection.getStatus());
             }
         });
     }
 
-    private void loadClients() {
+    private void refreshTableData() {
+        List<Ticket> activeTickets = context.getTickets();
+        observableTickets = FXCollections.observableArrayList(activeTickets);
+        ticketsTable.setItems(observableTickets);
+    }
+
+    @FXML
+    private void handleAddTicket() {
+        int session = Integer.parseInt(fldSession.getText());
+        int seat = Integer.parseInt(fldSeat.getText());
+        int client = Integer.parseInt(fldClient.getText());
+        double price = Double.parseDouble(fldPrice.getText());
+        String status = fldStatus.getText().isEmpty() ? DEFAULT_NEW_TICKET_STATUS : fldStatus.getText();
+
+        Ticket newTicket = new Ticket(ID_PLACEHOLDER, session, seat, client, price, status);
+        context.insertTicket(newTicket);
+        refreshTableData();
+    }
+
+    @FXML
+    private void handleUpdateTicket() {
+        Ticket selected = ticketsTable.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            selected.setIdSession(Integer.parseInt(fldSession.getText()));
+            selected.setIdSeat(Integer.parseInt(fldSeat.getText()));
+            selected.setIdClient(Integer.parseInt(fldClient.getText()));
+            selected.setPrice(Double.parseDouble(fldPrice.getText()));
+            selected.setStatus(fldStatus.getText());
+
+            context.markTicketModified(selected);
+            refreshTableData();
+        }
+    }
+
+    @FXML
+    private void handleDeleteTicket() {
+        Ticket selected = ticketsTable.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            context.deleteTicket(selected);
+            refreshTableData();
+        }
+    }
+
+    @FXML
+    private void handleSubmitChanges() {
         try {
-            clientsList.setAll(dbManager.readTableClients());
+            context.submitChanges();
+            refreshTableData();
+            txtAreaOutput.setText("Changes successfully saved to database.");
         } catch (SQLException e) {
-            showError("Ошибка загрузки клиентов", e.getMessage());
+            txtAreaOutput.setText("Error saving to DB: " + e.getMessage());
         }
     }
 
-    private void loadSessions() {
-        try {
-            sessionsList.setAll(dbManager.readTableSessions());
-        } catch (SQLException e) {
-            showError("Ошибка загрузки сеансов", e.getMessage());
-        }
+    @FXML
+    private void handleFilterTickets() {
+        double minPrice = fldFilterPrice.getText().isEmpty() ? 0 : Double.parseDouble(fldFilterPrice.getText());
+
+        List<Ticket> filteredAndSorted = context.getTickets().stream()
+                .filter(t -> t.getPrice() > minPrice)
+                .sorted((t1, t2) -> Double.compare(t2.getPrice(), t1.getPrice()))
+                .collect(Collectors.toList());
+
+        ticketsTable.setItems(FXCollections.observableArrayList(filteredAndSorted));
     }
 
-    private void loadSeatsForHall(int hallId) {
-        try {
-            seatsList.setAll(dbManager.readSeatsByHall(hallId));
-        } catch (SQLException e) {
-            showError("Ошибка загрузки мест", e.getMessage());
-        }
+    @FXML
+    private void handleGroupTickets() {
+        Map<String, Long> groupedData = context.getTickets().stream()
+                .collect(Collectors.groupingBy(Ticket::getStatus, Collectors.counting()));
+
+        StringBuilder sb = new StringBuilder("Tickets grouped by status:\n");
+        groupedData.forEach((status, count) ->
+                sb.append("Status: ").append(status).append(" | Count: ").append(count).append("\n"));
+
+        txtAreaOutput.setText(sb.toString());
     }
 
-    private void handleBuyTicket() {
-        Client client = clientComboBox.getValue();
-        Session session = sessionComboBox.getValue();
-        Seat seat = seatComboBox.getValue();
-        String status = statusComboBox.getValue();
-        String priceText = priceField.getText();
-
-        if (client == null || session == null || seat == null || status == null || priceText.isEmpty()) {
-            showError("Заполните поля", "Пожалуйста, выберите все параметры билета.");
-            return;
-        }
-
-        try {
-            double price = Double.parseDouble(priceText);
-
-            Ticket newTicket = new Ticket(
-                    DEFAULT_ID,
-                    session.getIdSession(),
-                    seat.getIdSeat(),
-                    client.getId(),
-                    price,
-                    status
-            );
-
-            EntityState<Ticket> ticketState = new EntityState<>(newTicket, RowState.ADDED);
-            List<EntityState<Ticket>> ticketStates = List.of(ticketState);
-
-            dbManager.syncAll(
-                    new ArrayList<>(),
-                    ticketStates,
-                    new ArrayList<>(),
-                    new ArrayList<>(),
-                    new ArrayList<>(),
-                    new ArrayList<>()
-            );
-
-            showSuccess("Успех", "Билет успешно оформлен!");
-            clearTicketFields();
-
-        } catch (NumberFormatException e) {
-            showError("Ошибка формата", "Введена некорректная цена.");
-        } catch (SQLException e) {
-            showError("Ошибка БД", e.getMessage());
-        }
-    }
-
-    private void handleOpenEditor() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(CLIENT_EDITOR_FXML));
-            Parent root = loader.load();
-
-            ClientEditorController controller = loader.getController();
-            controller.setDbManager(dbManager);
-
-            Stage stage = new Stage();
-            stage.setTitle(EDITOR_TITLE);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-
-            stage.showAndWait();
-            loadClients();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void clearTicketFields() {
-        sessionComboBox.getSelectionModel().clearSelection();
-        seatComboBox.getSelectionModel().clearSelection();
-        statusComboBox.getSelectionModel().clearSelection();
-        priceField.clear();
-    }
-
-    private void setupComboBoxConverters() {
-        clientComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Client client) {
-                return client == null ? "" : client.getSurname() + " " + client.getName() + " (" + client.getPhone() + ")";
-            }
-            @Override
-            public Client fromString(String string) { return null; }
-        });
-
-        sessionComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Session session) {
-                return session == null ? "" : "Сеанс #" + session.getIdSession() + " (Зал " + session.getIdHall() + ")";
-            }
-            @Override
-            public Session fromString(String string) { return null; }
-        });
-
-        seatComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Seat seat) {
-                return seat == null ? "" : "Ряд " + seat.getRowNumber() + ", Место " + seat.getSeatNumber();
-            }
-            @Override
-            public Seat fromString(String string) { return null; }
-        });
-    }
-
-    private void showError(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    private void showSuccess(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    @FXML
+    private void handleResetView() {
+        refreshTableData();
+        txtAreaOutput.clear();
     }
 }
