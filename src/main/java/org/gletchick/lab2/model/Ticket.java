@@ -1,26 +1,29 @@
 package org.gletchick.lab2.model;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Entity
+@Table(name = "tickets")
 @AllArgsConstructor
 @NoArgsConstructor
 public class Ticket {
-    private int id;
-    private int idSession;
-    private int idSeat;
-    private int idClient;
-    private double price;
-    private String status;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_ticket")
+    private Integer id;
 
-    public Ticket(Ticket other) {
-        this.id = other.id;
-        this.idSession = other.idSession;
-        this.idSeat = other.idSeat;
-        this.idClient = other.idClient;
-        this.price = other.price;
-        this.status = other.status;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_session")
+    private Session session;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_client")
+    private Client client;
+
+    private Double price;
+    private String status;
 }

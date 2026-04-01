@@ -1,12 +1,23 @@
 package org.gletchick.lab2.model;
 
-import lombok.Data;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Entity
+@Table(name = "halls")
 @AllArgsConstructor
+@NoArgsConstructor
 public class Hall {
-    private int idHall;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_hall")
+    private Integer idHall;
+
+    @Column(name = "hall_name")
     private String hallName;
-    private int capacity;
+
+    private Integer capacity;
 }

@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/gletchick/lab2/ui/main_view.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/org/gletchick/lab2/ui/MainView.fxml"));
         Scene scene = new Scene(loader.load());
 
         primaryStage.setTitle("Система управления театром");

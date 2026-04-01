@@ -3,145 +3,113 @@ package org.gletchick.lab2.controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import org.gletchick.lab2.context.TicketSystemContext;
-import org.gletchick.lab2.model.Ticket;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 
-import java.sql.SQLException;
-import java.util.List;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class MainController {
 
-    @FXML private TableView<Ticket> ticketsTable;
-    @FXML private TableColumn<Ticket, Integer> colId;
-    @FXML private TableColumn<Ticket, Integer> colSession;
-    @FXML private TableColumn<Ticket, Integer> colSeat;
-    @FXML private TableColumn<Ticket, Integer> colClient;
-    @FXML private TableColumn<Ticket, Double> colPrice;
-    @FXML private TableColumn<Ticket, String> colStatus;
+    @FXML
+    private ListView<String> menuList;
+    @FXML
+    private StackPane contentArea;
 
-    @FXML private TextField fldSession;
-    @FXML private TextField fldSeat;
-    @FXML private TextField fldClient;
-    @FXML private TextField fldPrice;
-    @FXML private TextField fldStatus;
-    @FXML private TextField fldFilterPrice;
-    @FXML private TextArea txtAreaOutput;
-
-    private TicketSystemContext context;
-    private ObservableList<Ticket> observableTickets;
-
-    private static final String DEFAULT_NEW_TICKET_STATUS = "AVAILABLE";
-    private static final int ID_PLACEHOLDER = 0;
+    private final Map<String, String> viewRoutes = new HashMap<>();
+    private TableView<?> currentTableView; // Храним ссылку на активную таблицу
 
     @FXML
     public void initialize() {
-        context = new TicketSystemContext();
+        viewRoutes.put("Клиенты", "/org/gletchick/lab2/ui/ClientView.fxml");
+        viewRoutes.put("Спектакли", "/org/gletchick/lab2/ui/SpectacleView.fxml");
+        viewRoutes.put("Залы", "/org/gletchick/lab2/ui/HallView.fxml");
+        viewRoutes.put("Места", "/org/gletchick/lab2/ui/SeatView.fxml");
+        viewRoutes.put("Сеансы", "/org/gletchick/lab2/ui/SessionView.fxml");
+        viewRoutes.put("Билеты", "/org/gletchick/lab2/ui/TicketView.fxml");
 
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colSession.setCellValueFactory(new PropertyValueFactory<>("idSession"));
-        colSeat.setCellValueFactory(new PropertyValueFactory<>("idSeat"));
-        colClient.setCellValueFactory(new PropertyValueFactory<>("idClient"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        refreshTableData();
-
-        ticketsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                fldSession.setText(String.valueOf(newSelection.getIdSession()));
-                fldSeat.setText(String.valueOf(newSelection.getIdSeat()));
-                fldClient.setText(String.valueOf(newSelection.getIdClient()));
-                fldPrice.setText(String.valueOf(newSelection.getPrice()));
-                fldStatus.setText(newSelection.getStatus());
-            }
+        menuList.setItems(FXCollections.observableArrayList(viewRoutes.keySet()));
+        menuList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) loadTable(viewRoutes.get(newVal));
         });
     }
 
-    private void refreshTableData() {
-        List<Ticket> activeTickets = context.getTickets();
-        observableTickets = FXCollections.observableArrayList(activeTickets);
-        ticketsTable.setItems(observableTickets);
-    }
-
-    @FXML
-    private void handleAddTicket() {
-        int session = Integer.parseInt(fldSession.getText());
-        int seat = Integer.parseInt(fldSeat.getText());
-        int client = Integer.parseInt(fldClient.getText());
-        double price = Double.parseDouble(fldPrice.getText());
-        String status = fldStatus.getText().isEmpty() ? DEFAULT_NEW_TICKET_STATUS : fldStatus.getText();
-
-        Ticket newTicket = new Ticket(ID_PLACEHOLDER, session, seat, client, price, status);
-        context.insertTicket(newTicket);
-        refreshTableData();
-    }
-
-    @FXML
-    private void handleUpdateTicket() {
-        Ticket selected = ticketsTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            selected.setIdSession(Integer.parseInt(fldSession.getText()));
-            selected.setIdSeat(Integer.parseInt(fldSeat.getText()));
-            selected.setIdClient(Integer.parseInt(fldClient.getText()));
-            selected.setPrice(Double.parseDouble(fldPrice.getText()));
-            selected.setStatus(fldStatus.getText());
-
-            context.markTicketModified(selected);
-            refreshTableData();
-        }
-    }
-
-    @FXML
-    private void handleDeleteTicket() {
-        Ticket selected = ticketsTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            context.deleteTicket(selected);
-            refreshTableData();
-        }
-    }
-
-    @FXML
-    private void handleSubmitChanges() {
+    private void loadTable(String fxmlPath) {
         try {
-            context.submitChanges();
-            refreshTableData();
-            txtAreaOutput.setText("Changes successfully saved to database.");
-        } catch (SQLException e) {
-            txtAreaOutput.setText("Error saving to DB: " + e.getMessage());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent view = loader.load();
+            contentArea.getChildren().setAll(view);
+
+            // Поиск TableView в загруженном FXML
+            findTableView(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Рекурсивный поиск TableView в контейнере
+    private void findTableView(Node node) {
+        if (node instanceof TableView) {
+            currentTableView = (TableView<?>) node;
+        } else if (node instanceof javafx.scene.layout.Pane) {
+            for (Node child : ((javafx.scene.layout.Pane) node).getChildren()) {
+                findTableView(child);
+            }
         }
     }
 
     @FXML
-    private void handleFilterTickets() {
-        double minPrice = fldFilterPrice.getText().isEmpty() ? 0 : Double.parseDouble(fldFilterPrice.getText());
+    private void handleExportAction() {
+        if (currentTableView == null || currentTableView.getItems().isEmpty()) {
+            System.out.println("Нет данных для экспорта или таблица не выбрана");
+            return;
+        }
 
-        List<Ticket> filteredAndSorted = context.getTickets().stream()
-                .filter(t -> t.getPrice() > minPrice)
-                .sorted((t1, t2) -> Double.compare(t2.getPrice(), t1.getPrice()))
-                .collect(Collectors.toList());
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить данные");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = fileChooser.showSaveDialog(contentArea.getScene().getWindow());
 
-        ticketsTable.setItems(FXCollections.observableArrayList(filteredAndSorted));
+        if (file != null) {
+            saveTableToCSV(file);
+        }
     }
 
-    @FXML
-    private void handleGroupTickets() {
-        Map<String, Long> groupedData = context.getTickets().stream()
-                .collect(Collectors.groupingBy(Ticket::getStatus, Collectors.counting()));
+    private void saveTableToCSV(File file) {
+        try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
+            // Получаем список колонок
+            ObservableList<? extends TableColumn<?, ?>> columns = currentTableView.getColumns();
 
-        StringBuilder sb = new StringBuilder("Tickets grouped by status:\n");
-        groupedData.forEach((status, count) ->
-                sb.append("Status: ").append(status).append(" | Count: ").append(count).append("\n"));
+            // 1. Записываем заголовки
+            for (int i = 0; i < columns.size(); i++) {
+                String header = columns.get(i).getText();
+                writer.print(header + (i == columns.size() - 1 ? "" : ","));
+            }
+            writer.println();
 
-        txtAreaOutput.setText(sb.toString());
-    }
+            // 2. Записываем данные строк
+            for (Object item : currentTableView.getItems()) {
+                for (int i = 0; i < columns.size(); i++) {
+                    // Используем сырой тип TableColumn для обхода ошибки компиляции
+                    TableColumn rawColumn = columns.get(i);
+                    Object value = rawColumn.getCellData(item);
 
-    @FXML
-    private void handleResetView() {
-        refreshTableData();
-        txtAreaOutput.clear();
+                    String cellValue = (value != null) ? value.toString().replace(",", ";") : "";
+                    writer.print(cellValue + (i == columns.size() - 1 ? "" : ","));
+                }
+                writer.println();
+            }
+        } catch (IOException e) {
+            System.err.println("Ошибка при сохранении файла: " + e.getMessage());
+        }
     }
 }

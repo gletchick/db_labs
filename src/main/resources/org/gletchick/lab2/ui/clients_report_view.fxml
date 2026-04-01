@@ -23,6 +23,7 @@
     </TableView>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Экспорт в файл" onAction="#handleExportToFile" fx:id="btnExport" />
         <Button text="Сформировать справку" onAction="#handleGenerateReport" fx:id="btnReport" />
     </HBox>
 </VBox>
