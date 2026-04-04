@@ -1,14 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="CONTROLLER_NAME"
-            prefHeight="400.0" prefWidth="600.0">
+<VBox prefWidth="250.0" spacing="10.0" styleClass="admin-card"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.gletchick.db.controller.PosterItemController">
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <Label fx:id="titleLabel" text="Название спектакля" textFill="#2c3e50" wrapText="true" HBox.hgrow="ALWAYS">
+                <font>
+                    <Font name="System Bold" size="18.0" />
+                </font>
+            </Label>
+            <Label fx:id="ageLabel" text="16+" textFill="#e74c3c">
+                <font>
+                    <Font name="System Bold" size="14.0" />
+                </font>
+            </Label>
+        </HBox>
+        <Label fx:id="genreLabel" text="Жанр: Драма" textFill="#7f8c8d" />
+        <Label fx:id="directorLabel" text="Режиссер: Имя" textFill="#7f8c8d" />
+        <Label fx:id="durationLabel" text="Длительность: 120 мин" textFill="#7f8c8d" />
+        <Label fx:id="languageLabel" text="Язык: Русский" textFill="#7f8c8d" />
 
-</AnchorPane>
+        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                onAction="#handleBuyTicket" styleClass="admin-action-button" text="Купить билет">
+            <VBox.margin>
+                <Insets top="10.0" />
+            </VBox.margin>
+        </Button>
+    </children>
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+    </padding>
+</VBox>

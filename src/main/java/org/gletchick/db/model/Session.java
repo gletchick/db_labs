@@ -17,14 +17,25 @@ public class Session {
     @Column(name = "id_session")
     private Integer idSession;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_spectacle")
     private Spectacle spectacle;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_hall")
     private Hall hall;
 
     @Column(name = "date_time_start")
     private LocalDateTime dateTimeStart;
+
+    @Override
+    public String toString() {
+        if (spectacle == null || dateTimeStart == null) return "Некорректный сеанс";
+
+        java.util.Locale russian = new java.util.Locale("ru");
+        java.time.format.DateTimeFormatter formatter =
+                java.time.format.DateTimeFormatter.ofPattern("dd MMM, HH:mm", russian);
+
+        return spectacle.getTitle() + " | " + dateTimeStart.format(formatter);
+    }
 }

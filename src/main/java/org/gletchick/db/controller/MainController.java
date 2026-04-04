@@ -3,10 +3,13 @@ package org.gletchick.db.controller;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.StackPane;
+import org.gletchick.db.util.UserSession;
+
 import java.io.IOException;
 
-public class MainController {
+public class MainController extends BaseController{
 
     @FXML
     private StackPane contentArea;
@@ -18,7 +21,11 @@ public class MainController {
 
     @FXML
     private void showMyTickets() {
-        System.out.println("Открываем билеты...");
+        if (UserSession.getInstance().isLoggedIn()) {
+            loadView("my_tickets.fxml");
+        } else {
+            showAlert("Внимание", "Пожалуйста, авторизуйтесь для просмотра билетов", Alert.AlertType.WARNING);
+        }
     }
 
     @FXML

@@ -16,14 +16,20 @@ public class Ticket {
     @Column(name = "id_ticket")
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_session")
     private Session session;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_client")
     private Client client;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_seat")
+    private Seat seat;
+
     private Double price;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private TicketStatus status;
 }

@@ -19,4 +19,11 @@ public class Spectacle {
     private String title;
     private String genre;
     private Integer duration;
+
+    private String director;
+
+    @Column(name = "age_restriction")
+    private String ageRestriction;
+
+    private String language;
 }

@@ -1,48 +1,103 @@
 package org.gletchick.db.controller;
 
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import org.gletchick.db.factory.ServiceFactory;
 import org.gletchick.db.model.Client;
+import org.gletchick.db.model.Ticket;
 import org.gletchick.db.service.ClientService;
-import org.gletchick.db.service.impl.ClientServiceImpl;
+import org.gletchick.db.service.TicketService;
 import org.gletchick.db.util.UserSession;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ProfileController extends BaseController {
+
+    @FXML private VBox authContainer;
+    @FXML private VBox profileContainer;
 
     @FXML private Label headerLabel, statusLabel;
     @FXML private TextField loginField, firstNameField, surnameField, patronymicField, phoneField;
     @FXML private PasswordField passwordField;
-
     @FXML private Label lblFirstName, lblSurname, lblPatronymic, lblPhone;
     @FXML private Button mainActionButton, secondaryModeButton;
 
-    private final ClientService clientService = new ClientServiceImpl();
+    // Оставляем только те элементы, которые реально есть в твоем новом FXML
+    @FXML private Label userFullInfoLabel;
+    @FXML private ListView<String> historyListView;
+
+    private final ClientService clientService = ServiceFactory.getInstance().getClientService();
+    private final TicketService ticketService = ServiceFactory.getInstance().getTicketService();
+
     private boolean isLoginMode = true;
 
     @FXML
-    private void switchMode() {
-        isLoginMode = !isLoginMode;
-
-        headerLabel.setText(isLoginMode ? "Вход в систему" : "Регистрация");
-        mainActionButton.setText(isLoginMode ? "Войти" : "Зарегистрироваться");
-        secondaryModeButton.setText(isLoginMode ? "Создать аккаунт" : "Уже есть аккаунт?");
-
-        // Управляем видимостью полей регистрации
-        toggleField(firstNameField, lblFirstName, !isLoginMode);
-        toggleField(surnameField, lblSurname, !isLoginMode);
-        toggleField(patronymicField, lblPatronymic, !isLoginMode);
-        toggleField(phoneField, lblPhone, !isLoginMode);
-
-        statusLabel.setText("");
+    public void initialize() {
+        updateUI();
     }
 
-    private void toggleField(Control field, Label label, boolean show) {
-        field.setVisible(show);
-        field.setManaged(show);
-        label.setVisible(show);
-        label.setManaged(show);
+    private void updateUI() {
+        boolean loggedIn = UserSession.getInstance().isLoggedIn();
+
+        authContainer.setVisible(!loggedIn);
+        authContainer.setManaged(!loggedIn);
+
+        profileContainer.setVisible(loggedIn);
+        profileContainer.setManaged(loggedIn);
+
+        if (loggedIn) {
+            setupProfilePage();
+        } else {
+            statusLabel.setText("");
+        }
+    }
+
+    private void setupProfilePage() {
+        // Убедись, что метод называется именно так в твоем UserSession
+        Client user = UserSession.getInstance().getCurrentClient();
+
+        // Теперь мы не просто создаем строку info, а сеттим её в Label
+        String info = String.format(
+                "Фамилия: %s\nИмя: %s\nОтчество: %s\nЛогин: %s\nТелефон: %s",
+                user.getSurname(),
+                user.getName(),
+                user.getPatronymic() != null ? user.getPatronymic() : "-",
+                user.getLogin(),
+                user.getPhone() != null ? user.getPhone() : "-"
+        );
+
+        if (userFullInfoLabel != null) {
+            userFullInfoLabel.setText(info);
+        }
+
+        loadTicketHistory(user);
+    }
+
+    private void loadTicketHistory(Client user) {
+        try {
+            List<Ticket> allTickets = ticketService.findAll();
+
+            List<String> userHistory = allTickets.stream()
+                    .filter(t -> t.getClient() != null && t.getClient().getId().equals(user.getId()))
+                    .map(t -> String.format("%s\nДата: %s | Статус: %s",
+                            t.getSession().getSpectacle().getTitle(),
+                            t.getSession().getDateTimeStart().toLocalDate().toString(),
+                            t.getStatus()))
+                    .collect(Collectors.toList());
+
+            if (userHistory.isEmpty()) {
+                historyListView.setItems(FXCollections.observableArrayList("История заказов пуста"));
+            } else {
+                historyListView.setItems(FXCollections.observableArrayList(userHistory));
+            }
+        } catch (Exception e) {
+            historyListView.setItems(FXCollections.observableArrayList("Ошибка загрузки истории"));
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -66,7 +121,7 @@ public class ProfileController extends BaseController {
         Optional<Client> client = clientService.authenticate(login, pass);
         if (client.isPresent()) {
             UserSession.getInstance().login(client.get());
-            showSuccess("Добро пожаловать, " + client.get().getName() + "!");
+            updateUI();
         } else {
             showError("Неверный логин или пароль");
         }
@@ -74,7 +129,7 @@ public class ProfileController extends BaseController {
 
     private void handleRegister() {
         if (loginField.getText().isEmpty() || passwordField.getText().isEmpty() || firstNameField.getText().isEmpty()) {
-            showError("Заполните обязательные поля (Логин, Пароль, Имя)!");
+            showError("Заполните обязательные поля!");
             return;
         }
 
@@ -89,20 +144,42 @@ public class ProfileController extends BaseController {
         try {
             Client saved = clientService.save(client);
             UserSession.getInstance().login(saved);
-            showSuccess("Регистрация успешна! Вы вошли.");
+            updateUI();
         } catch (Exception e) {
-            showError("Ошибка: возможно, такой логин уже занят");
+            showError("Ошибка регистрации");
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void handleLogout() {
+        UserSession.getInstance().logout();
+        updateUI();
+    }
+
+    @FXML
+    private void switchMode() {
+        isLoginMode = !isLoginMode;
+        headerLabel.setText(isLoginMode ? "Вход в систему" : "Регистрация");
+        mainActionButton.setText(isLoginMode ? "Войти" : "Зарегистрироваться");
+        secondaryModeButton.setText(isLoginMode ? "Создать аккаунт" : "Уже есть аккаунт?");
+
+        toggleField(firstNameField, lblFirstName, !isLoginMode);
+        toggleField(surnameField, lblSurname, !isLoginMode);
+        toggleField(patronymicField, lblPatronymic, !isLoginMode);
+        toggleField(phoneField, lblPhone, !isLoginMode);
+        statusLabel.setText("");
+    }
+
+    private void toggleField(Control field, Label label, boolean show) {
+        field.setVisible(show);
+        field.setManaged(show);
+        label.setVisible(show);
+        label.setManaged(show);
     }
 
     private void showError(String msg) {
         statusLabel.setText(msg);
         statusLabel.setStyle("-fx-text-fill: #e74c3c;");
-    }
-
-    private void showSuccess(String msg) {
-        statusLabel.setText(msg);
-        statusLabel.setStyle("-fx-text-fill: #27ae60;");
     }
 }

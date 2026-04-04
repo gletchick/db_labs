@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.gletchick.db.controller.MyTicketsController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Мои билеты" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="ticketsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="sessionColumn" text="Сеанс" prefWidth="200"/>
+            <TableColumn fx:id="priceColumn" text="Цена" prefWidth="100"/>
+            <TableColumn fx:id="statusColumn" text="Статус" prefWidth="120"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Отменить билет" onAction="#handleCancelTicket"
+                style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+    </HBox>
+</VBox>

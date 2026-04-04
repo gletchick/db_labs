@@ -1,15 +1,18 @@
 package org.gletchick.db.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.gletchick.db.model.Client;
+import org.gletchick.db.repository.ClientRepository;
 import org.gletchick.db.repository.CrudRepository;
 import org.gletchick.db.repository.impl.ClientRepositoryImpl;
 import org.gletchick.db.service.ClientService;
 
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public class ClientServiceImpl extends BaseService<Client, Integer> implements ClientService {
 
-    private final CrudRepository<Client, Integer> repository = new ClientRepositoryImpl();
+    private final ClientRepository repository;
 
     @Override
     protected CrudRepository<Client, Integer> getRepository() {

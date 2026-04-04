@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.gletchick.db.controller.AdminPanelController">
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+
+    <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Панель администратора" />
+
+    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <tabs>
+            <Tab text="Спектакли">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="spectacleTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colSpecId" prefWidth="50.0" text="ID" />
+                            <TableColumn fx:id="colSpecTitle" prefWidth="250.0" text="Название" />
+                            <TableColumn fx:id="colSpecGenre" prefWidth="150.0" text="Жанр" />
+                            <TableColumn fx:id="colSpecDuration" prefWidth="120.0" text="Длительность (мин)" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <HBox spacing="15.0" alignment="CENTER_LEFT">
+                        <children>
+                            <VBox spacing="5.0">
+                                <Label text="Название:" />
+                                <TextField fx:id="specTitleField" prefWidth="200.0" />
+                            </VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Жанр:" />
+                                <TextField fx:id="specGenreField" prefWidth="150.0" />
+                            </VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Длительность:" />
+                                <TextField fx:id="specDurationField" prefWidth="100.0" promptText="минуты" />
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="15.0" alignment="CENTER_RIGHT">
+                        <Button onAction="#handleClearSpecFields" text="Очистить" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" />
+                        <Button onAction="#handleDeleteSpec" text="Удалить" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        <Button onAction="#handleUpdateSpec" text="Изменить" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
+                        <Button onAction="#handleAddSpec" text="Добавить" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="Залы">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="hallTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colHallId" prefWidth="50.0" text="ID" />
+                            <TableColumn fx:id="colHallName" prefWidth="250.0" text="Название зала" />
+                            <TableColumn fx:id="colHallCapacity" prefWidth="150.0" text="Вместимость" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <HBox spacing="15.0" alignment="CENTER_LEFT">
+                        <children>
+                            <VBox spacing="5.0">
+                                <Label text="Название зала:" />
+                                <TextField fx:id="hallNameField" prefWidth="250.0" promptText="Например: Большой зал" />
+                            </VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Вместимость:" />
+                                <TextField fx:id="hallCapacityField" prefWidth="100.0" promptText="0" />
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="15.0" alignment="CENTER_RIGHT">
+                        <Button onAction="#handleClearHallFields" text="Очистить" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" />
+                        <Button onAction="#handleDeleteHall" text="Удалить" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        <Button onAction="#handleUpdateHall" text="Изменить" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
+                        <Button onAction="#handleAddHall" text="Добавить" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="Сеансы">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="sessionTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colSessionId" prefWidth="50.0" text="ID" />
+                            <TableColumn fx:id="colSessionSpectacle" prefWidth="200.0" text="Спектакль" />
+                            <TableColumn fx:id="colSessionHall" prefWidth="150.0" text="Зал" />
+                            <TableColumn fx:id="colSessionDateTime" prefWidth="180.0" text="Дата и время" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <GridPane hgap="10.0" vgap="10.0">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="100.0" prefWidth="150.0" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                            <ColumnConstraints minWidth="100.0" prefWidth="150.0" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        <children>
+                            <Label text="Спектакль:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="sessionSpectacleComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                            <Label text="Зал:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="sessionHallComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                            <Label text="Дата начала:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <DatePicker fx:id="sessionDatePicker" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                            <Label text="Время (HH:mm):" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <TextField fx:id="sessionTimeField" promptText="19:00" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                        </children>
+                    </GridPane>
+
+                    <HBox alignment="CENTER_RIGHT" spacing="15.0">
+                        <Button onAction="#handleClearSessionFields" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" text="Очистить" />
+                        <Button onAction="#handleDeleteSession" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Удалить" />
+                        <Button onAction="#handleUpdateSession" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="Изменить" />
+                        <Button onAction="#handleAddSession" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Добавить" />
+                    </HBox>
+                </VBox>
+            </Tab>
+
+            <Tab text="Клиенты">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="clientTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colClientLogin" prefWidth="100.0" text="Логин" />
+                            <TableColumn fx:id="colClientName" prefWidth="100.0" text="Имя" />
+                            <TableColumn fx:id="colClientSurname" prefWidth="100.0" text="Фамилия" />
+                            <TableColumn fx:id="colClientPhone" prefWidth="120.0" text="Телефон" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <GridPane hgap="10.0" vgap="10.0">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="100.0" prefWidth="150.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+                            <ColumnConstraints minWidth="100.0" prefWidth="150.0" />
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="200.0" />
+                        </columnConstraints>
+                        <children>
+                            <Label text="Логин:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="loginField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                            <Label text="Пароль:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <PasswordField fx:id="passwordField" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                            <Label text="Имя:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <TextField fx:id="nameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                            <Label text="Фамилия:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <TextField fx:id="surnameField" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+                            <Label text="Отчество:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <TextField fx:id="patronymicField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                            <Label text="Телефон:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <TextField fx:id="phoneField" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                        </children>
+                    </GridPane>
+
+                    <HBox spacing="15.0" alignment="CENTER_RIGHT">
+                        <Button onAction="#handleClearFields" text="Очистить" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" />
+                        <Button onAction="#handleDeleteClient" text="Удалить" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        <Button onAction="#handleUpdateClient" text="Изменить" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
+                        <Button onAction="#handleAddClient" text="Добавить" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
+                    </HBox>
+                </VBox>
+            </Tab>
+            <Tab text="Места">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="seatTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colSeatId" prefWidth="50.0" text="ID" />
+                            <TableColumn fx:id="colSeatHall" prefWidth="150.0" text="Зал" />
+                            <TableColumn fx:id="colSeatRow" prefWidth="100.0" text="Ряд" />
+                            <TableColumn fx:id="colSeatNumber" prefWidth="100.0" text="Место" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <HBox spacing="15.0" alignment="CENTER_LEFT">
+                        <children>
+                            <VBox spacing="5.0">
+                                <Label text="Выберите зал:" />
+                                <ComboBox fx:id="seatHallComboBox" prefWidth="200.0" promptText="Зал..." />
+                            </VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Ряд:" />
+                                <TextField fx:id="seatRowField" prefWidth="80.0" />
+                            </VBox>
+                            <VBox spacing="5.0">
+                                <Label text="Место:" />
+                                <TextField fx:id="seatNumberField" prefWidth="80.0" />
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                    <HBox spacing="15.0" alignment="CENTER_RIGHT">
+                        <Button onAction="#handleClearSeatFields" text="Очистить" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" />
+                        <Button onAction="#handleDeleteSeat" text="Удалить" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" />
+                        <Button onAction="#handleUpdateSeat" text="Изменить" style="-fx-background-color: #f39c12; -fx-text-fill: white;" />
+                        <Button onAction="#handleAddSeat" text="Добавить" style="-fx-background-color: #27ae60; -fx-text-fill: white;" />
+                    </HBox>
+                </VBox>
+            </Tab>
+            <Tab text="Билеты">
+                <VBox spacing="15.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+
+                    <TableView fx:id="ticketTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colTicketId" prefWidth="40.0" text="ID" />
+                            <TableColumn fx:id="colTicketSession" prefWidth="180.0" text="Сеанс" />
+                            <TableColumn fx:id="colTicketClient" prefWidth="130.0" text="Клиент" />
+                            <TableColumn fx:id="colTicketSeat" prefWidth="100.0" text="Место" />
+                            <TableColumn fx:id="colTicketPrice" prefWidth="80.0" text="Цена" />
+                            <TableColumn fx:id="colTicketStatus" prefWidth="100.0" text="Статус" />
+                        </columns>
+                    </TableView>
+
+                    <Separator />
+
+                    <GridPane hgap="10.0" vgap="10.0">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="100.0" prefWidth="120.0" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                            <ColumnConstraints minWidth="100.0" prefWidth="120.0" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+                        <children>
+                            <Label text="Сеанс:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="ticketSessionComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                            <Label text="Клиент:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <ComboBox fx:id="ticketClientComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                            <Label text="Место:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="ticketSeatComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                            <Label text="Статус:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="ticketStatusComboBox" maxWidth="1.7976931348623157E308" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+                            <Label text="Цена:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <TextField fx:id="ticketPriceField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        </children>
+                    </GridPane>
+
+                    <HBox alignment="CENTER_RIGHT" spacing="15.0">
+                        <Button onAction="#handleClearTicketFields" style="-fx-background-color: #95a5a6; -fx-text-fill: white;" text="Очистить" />
+                        <Button onAction="#handleDeleteTicket" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Удалить" />
+                        <Button onAction="#handleUpdateTicket" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="Изменить" />
+                        <Button onAction="#handleAddTicket" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Добавить" />
+                    </HBox>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
+</VBox>

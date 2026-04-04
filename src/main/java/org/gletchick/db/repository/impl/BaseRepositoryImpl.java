@@ -1,7 +1,8 @@
-package org.gletchick.db.repository;
+package org.gletchick.db.repository.impl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import org.gletchick.db.repository.CrudRepository;
 import org.gletchick.db.util.DbManager;
 
 import java.util.List;
