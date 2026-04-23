@@ -10,7 +10,6 @@ import org.gletchick.db.util.UserSession;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class BookingController extends BaseController {
 
@@ -52,9 +51,7 @@ public class BookingController extends BaseController {
         processTicket(TicketStatus.BOOKED, "Билет успешно забронирован!");
     }
 
-    // В loadSessions теперь используем фильтр БД
     private void loadSessions() {
-        // Теперь запрос идет сразу с фильтром по ID спектакля
         List<Session> sessions = sessionService.findBySpectacle(selectedSpectacle.getIdSpectacle());
         sessionComboBox.getItems().setAll(sessions);
     }
@@ -62,10 +59,8 @@ public class BookingController extends BaseController {
     private void loadSeats(Session session) {
         seatsPane.getChildren().clear();
 
-        // Получаем только места нужного зала
         List<Seat> allSeats = seatService.findByHall(session.getHall().getIdHall());
 
-        // Получаем только ID занятых мест через БД
         Set<Integer> occupiedSeatIds = ticketService.findOccupiedSeatIdsBySession(session.getIdSession());
 
         for (Seat seat : allSeats) {
@@ -97,7 +92,6 @@ public class BookingController extends BaseController {
         }
 
         try {
-            // Вызываем умный метод сервиса
             ticketService.processBooking(
                     sessionComboBox.getValue(),
                     selectedSeat,
@@ -106,12 +100,11 @@ public class BookingController extends BaseController {
             );
 
             showAlert("Успех", successMessage, Alert.AlertType.INFORMATION);
-            handleSessionSelected(); // Обновляем карту мест
+            handleSessionSelected();
 
         } catch (IllegalStateException e) {
-            // Если место перехватили
             showAlert("Ошибка", e.getMessage(), Alert.AlertType.ERROR);
-            handleSessionSelected(); // Сразу обновляем карту, чтобы кнопка стала неактивной
+            handleSessionSelected();
         } catch (Exception e) {
             showAlert("Ошибка", "Произошла ошибка при сохранении", Alert.AlertType.ERROR);
         }

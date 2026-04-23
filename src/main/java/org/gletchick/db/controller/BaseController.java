@@ -12,10 +12,4 @@ public abstract class BaseController {
         alert.setContentText(content);
         alert.showAndWait();
     }
-
-    protected void clearFields(TextInputControl... fields) {
-        for (TextInputControl field : fields) {
-            field.clear();
-        }
-    }
 }

@@ -9,11 +9,8 @@ public class HibernateUtil {
 
     private static SessionFactory buildSessionFactory() {
         try {
-            // Создаем конфигурацию из hibernate.cfg.xml
             Configuration configuration = new Configuration().configure();
 
-            // Явно регистрируем сущности (Entity)
-            // Это гарантирует, что Hibernate "увидит" твои таблицы при запуске
             configuration.addAnnotatedClass(Client.class);
             configuration.addAnnotatedClass(Hall.class);
             configuration.addAnnotatedClass(Seat.class);
@@ -33,7 +30,6 @@ public class HibernateUtil {
     }
 
     public static void shutdown() {
-        // Закрываем кэши и соединения
         if (sessionFactory != null && !sessionFactory.isClosed()) {
             sessionFactory.close();
         }

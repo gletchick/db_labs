@@ -5,15 +5,25 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.view.JasperViewer;
+import org.gletchick.db.dto.PopularityDTO;
 import org.gletchick.db.factory.ServiceFactory;
 import org.gletchick.db.model.*;
 import org.gletchick.db.service.*;
 
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdminPanelController {
 
@@ -78,6 +88,18 @@ public class AdminPanelController {
     @FXML private ComboBox<Seat> ticketSeatComboBox;
     @FXML private ComboBox<TicketStatus> ticketStatusComboBox;
     @FXML private TextField ticketPriceField;
+
+    @FXML private TextField specDirectorField;
+    @FXML private TextField specAgeRestrictionField;
+    @FXML private TextField specLanguageField;
+
+    @FXML private TableColumn<Spectacle, String> colSpecDirector;
+    @FXML private TableColumn<Spectacle, String> colSpecAge;
+    @FXML private TableColumn<Spectacle, String> colSpecLanguage;
+
+    @FXML private DatePicker reportStartDatePicker;
+    @FXML private DatePicker reportEndDatePicker;
+    @FXML private Label reportStatusLabel;
 
     private final ObservableList<Ticket> ticketData = FXCollections.observableArrayList();
     private final TicketService ticketService = ServiceFactory.getInstance().getTicketService();
@@ -160,10 +182,7 @@ public class AdminPanelController {
         ticketSessionComboBox.setItems(FXCollections.observableArrayList(ServiceFactory.getInstance().getSessionService().findAll()));
         ticketClientComboBox.setItems(FXCollections.observableArrayList(ServiceFactory.getInstance().getClientService().findAll()));
         ticketSeatComboBox.setItems(FXCollections.observableArrayList(ServiceFactory.getInstance().getSeatService().findAll()));
-        ticketStatusComboBox.setItems(FXCollections.observableArrayList(TicketStatus.values())); // Загрузка всех вариантов из Enum
-
-        // Кастомные конвертеры для ComboBox аналогично предыдущим сущностям...
-        // (Например, для сеанса используйте s.toString(), для клиента cl.getLogin() и т.д.)
+        ticketStatusComboBox.setItems(FXCollections.observableArrayList(TicketStatus.values()));
     }
 
     private void fillTicketFields(Ticket ticket) {
@@ -229,6 +248,9 @@ public class AdminPanelController {
         colSpecTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
         colSpecGenre.setCellValueFactory(new PropertyValueFactory<>("genre"));
         colSpecDuration.setCellValueFactory(new PropertyValueFactory<>("duration"));
+        colSpecDirector.setCellValueFactory(new PropertyValueFactory<>("director"));
+        colSpecAge.setCellValueFactory(new PropertyValueFactory<>("ageRestriction"));
+        colSpecLanguage.setCellValueFactory(new PropertyValueFactory<>("language"));
 
         loadSpectacleData();
 
@@ -246,14 +268,20 @@ public class AdminPanelController {
         specTitleField.setText(spec.getTitle());
         specGenreField.setText(spec.getGenre());
         specDurationField.setText(String.valueOf(spec.getDuration()));
+        specDirectorField.setText(spec.getDirector());
+        specAgeRestrictionField.setText(spec.getAgeRestriction());
+        specLanguageField.setText(spec.getLanguage());
     }
 
     @FXML
     private void handleClearSpecFields() {
-        spectacleTable.getSelectionModel().clearSelection();
         specTitleField.clear();
         specGenreField.clear();
         specDurationField.clear();
+        specDirectorField.clear();
+        specAgeRestrictionField.clear();
+        specLanguageField.clear();
+        spectacleTable.getSelectionModel().clearSelection();
     }
 
     @FXML
@@ -265,7 +293,6 @@ public class AdminPanelController {
             loadSpectacleData();
             handleClearSpecFields();
         } catch (NumberFormatException e) {
-            // Ошибка формата числа в duration
         }
     }
 
@@ -279,7 +306,6 @@ public class AdminPanelController {
                 spectacleTable.refresh();
                 handleClearSpecFields();
             } catch (NumberFormatException e) {
-                // Ошибка формата числа
             }
         }
     }
@@ -298,6 +324,9 @@ public class AdminPanelController {
         spec.setTitle(specTitleField.getText());
         spec.setGenre(specGenreField.getText());
         spec.setDuration(Integer.parseInt(specDurationField.getText()));
+        spec.setDirector(specDirectorField.getText());
+        spec.setAgeRestriction(specAgeRestrictionField.getText());
+        spec.setLanguage(specLanguageField.getText());
     }
 
     private void initSessionTab() {
@@ -306,7 +335,6 @@ public class AdminPanelController {
         colSessionHall.setCellValueFactory(new PropertyValueFactory<>("hall"));
         colSessionDateTime.setCellValueFactory(new PropertyValueFactory<>("dateTimeStart"));
 
-        // Кастомное отображение для Спектакля и Зала (используем названия вместо toString объектов)
         colSessionSpectacle.setCellFactory(column -> new TableCell<>() {
             @Override protected void updateItem(Spectacle item, boolean empty) {
                 super.updateItem(item, empty);
@@ -338,7 +366,6 @@ public class AdminPanelController {
         sessionSpectacleComboBox.setItems(FXCollections.observableArrayList(ServiceFactory.getInstance().getSpectacleService().findAll()));
         sessionHallComboBox.setItems(FXCollections.observableArrayList(ServiceFactory.getInstance().getHallService().findAll()));
 
-        // Настройка отображения названий в ComboBox
         sessionSpectacleComboBox.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Spectacle s) { return s == null ? "" : s.getTitle(); }
             @Override public Spectacle fromString(String s) { return null; }
@@ -376,7 +403,7 @@ public class AdminPanelController {
             loadSessionData();
             handleClearSessionFields();
         } catch (Exception e) {
-            e.printStackTrace(); // Тут стоит добавить Alert об ошибке формата времени
+            e.printStackTrace();
         }
     }
 
@@ -422,7 +449,6 @@ public class AdminPanelController {
         colSeatRow.setCellValueFactory(new PropertyValueFactory<>("rowNumber"));
         colSeatNumber.setCellValueFactory(new PropertyValueFactory<>("seatNumber"));
 
-        // Кастомное отображение зала в таблице (чтобы выводилось имя, а не адрес объекта)
         colSeatHall.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(Hall item, boolean empty) {
@@ -432,7 +458,7 @@ public class AdminPanelController {
         });
 
         loadSeatData();
-        updateHallComboBox(); // Заполняем список залов
+        updateHallComboBox();
 
         seatTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
@@ -446,12 +472,10 @@ public class AdminPanelController {
         seatTable.setItems(seatData);
     }
 
-    // Позволяет обновлять список залов в выпадающем меню (например, если добавили новый зал в соседней вкладке)
     private void updateHallComboBox() {
         List<Hall> halls = ServiceFactory.getInstance().getHallService().findAll();
         seatHallComboBox.setItems(FXCollections.observableArrayList(halls));
 
-        // Как отображать Hall в самом ComboBox
         seatHallComboBox.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Hall hall) { return hall == null ? "" : hall.getHallName(); }
             @Override public Hall fromString(String string) { return null; }
@@ -547,13 +571,12 @@ public class AdminPanelController {
             clientTable.setItems(clientData);
         } catch (Exception e) {
             e.printStackTrace();
-            // Здесь можно вызвать showAlert из BaseController, если он доступен
         }
     }
 
     private void fillFields(Client client) {
         loginField.setText(client.getLogin());
-        passwordField.setText(client.getPassword()); // Будьте осторожны с отображением пароля
+        passwordField.setText(client.getPassword());
         nameField.setText(client.getName());
         surnameField.setText(client.getSurname());
         patronymicField.setText(client.getPatronymic());
@@ -578,7 +601,6 @@ public class AdminPanelController {
             loadHallData();
             handleClearHallFields();
         } catch (NumberFormatException e) {
-            // Здесь можно вывести ошибку "Вместимость должна быть числом"
         }
     }
 
@@ -626,7 +648,7 @@ public class AdminPanelController {
 
         try {
             clientService.save(newClient);
-            loadClientData(); // Перезагружаем список из БД для актуальности
+            loadClientData();
             handleClearFields();
         } catch (Exception e) {
             e.printStackTrace();
@@ -669,5 +691,41 @@ public class AdminPanelController {
         client.setSurname(surnameField.getText());
         client.setPatronymic(patronymicField.getText());
         client.setPhone(phoneField.getText());
+    }
+
+    @FXML
+    private void handleGeneratePopularityReport() {
+        LocalDate start = reportStartDatePicker.getValue();
+        LocalDate end = reportEndDatePicker.getValue();
+
+        if (start == null || end == null) {
+            reportStatusLabel.setText("Ошибка: Выберите обе даты");
+            return;
+        }
+
+        try {
+            List<PopularityDTO> data = ticketService.getPopularityData(
+                    start.atStartOfDay(),
+                    end.atTime(LocalTime.MAX)
+            );
+
+            InputStream reportStream = getClass().getResourceAsStream("/reports/popular_spectacles.jrxml");
+            JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("startDate", start.toString());
+            parameters.put("endDate", end.toString());
+
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(data);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+            JasperViewer.viewReport(jasperPrint, false);
+
+            reportStatusLabel.setText("Отчет успешно сформирован");
+        } catch (Exception e) {
+            e.printStackTrace();
+            reportStatusLabel.setText("Ошибка при генерации отчета");
+        }
     }
 }

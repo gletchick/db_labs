@@ -26,7 +26,6 @@ public class ProfileController extends BaseController {
     @FXML private Label lblFirstName, lblSurname, lblPatronymic, lblPhone;
     @FXML private Button mainActionButton, secondaryModeButton;
 
-    // Оставляем только те элементы, которые реально есть в твоем новом FXML
     @FXML private Label userFullInfoLabel;
     @FXML private ListView<String> historyListView;
 
@@ -57,10 +56,8 @@ public class ProfileController extends BaseController {
     }
 
     private void setupProfilePage() {
-        // Убедись, что метод называется именно так в твоем UserSession
         Client user = UserSession.getInstance().getCurrentClient();
 
-        // Теперь мы не просто создаем строку info, а сеттим её в Label
         String info = String.format(
                 "Фамилия: %s\nИмя: %s\nОтчество: %s\nЛогин: %s\nТелефон: %s",
                 user.getSurname(),

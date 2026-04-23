@@ -15,7 +15,6 @@ import org.gletchick.db.service.SpectacleService;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PosterController extends BaseController {
 
@@ -23,7 +22,6 @@ public class PosterController extends BaseController {
     private FlowPane posterFlowPane;
     @FXML
     private TextField titleFilter;
-    // Имена должны СТРОГО совпадать с fx:id в FXML
     @FXML
     private ComboBox<String> genreFilter;
     @FXML
@@ -48,7 +46,6 @@ public class PosterController extends BaseController {
         setupComboBox(ageFilter, all.stream().map(Spectacle::getAgeRestriction).distinct().toList(), "Любой возраст");
         setupComboBox(languageFilter, all.stream().map(Spectacle::getLanguage).distinct().toList(), "Любой язык");
 
-        // Добавляем слушателя для нового поля названия
         titleFilter.textProperty().addListener((o, old, newVal) -> updateFilter());
 
         directorFilter.textProperty().addListener((o, old, newVal) -> updateFilter());
@@ -60,7 +57,6 @@ public class PosterController extends BaseController {
     }
 
     private void updateFilter() {
-        // Сбор данных из всех полей
         String titleSearch = titleFilter.getText().toLowerCase().trim();
         String directorSearch = directorFilter.getText().toLowerCase().trim();
         String genre = genreFilter.getValue();
@@ -68,20 +64,16 @@ public class PosterController extends BaseController {
         String lang = languageFilter.getValue();
 
         filteredData.setPredicate(s -> {
-            // 1. Проверка названия
             boolean matchesTitle = titleSearch.isEmpty() ||
                     s.getTitle().toLowerCase().contains(titleSearch);
 
-            // 2. Проверка режиссера
             boolean matchesDirector = directorSearch.isEmpty() ||
                     (s.getDirector() != null && s.getDirector().toLowerCase().contains(directorSearch));
 
-            // 3. Остальные фильтры
             boolean matchesGenre = genre.equals("Все жанры") || s.getGenre().equals(genre);
             boolean matchesAge = age.equals("Любой возраст") || s.getAgeRestriction().equals(age);
             boolean matchesLang = lang.equals("Любой язык") || s.getLanguage().equals(lang);
 
-            // Объединяем все условия через "И"
             return matchesTitle && matchesDirector && matchesGenre && matchesAge && matchesLang;
         });
 
@@ -90,15 +82,13 @@ public class PosterController extends BaseController {
 
     @FXML
     private void handleResetFilters() {
-        titleFilter.clear(); // Сбрасываем новое поле
+        titleFilter.clear();
         directorFilter.clear();
         genreFilter.setValue("Все жанры");
         ageFilter.setValue("Любой возраст");
         languageFilter.setValue("Любой язык");
-        // renderPoster() вызовется автоматически через слушателей
     }
 
-    // Методы setupComboBox и renderPoster остаются без изменений
     private void setupComboBox(ComboBox<String> cb, List<String> items, String defaultText) {
         cb.getItems().clear();
         cb.getItems().add(defaultText);

@@ -1,23 +1,21 @@
 .menu-button {
     -fx-background-color: transparent;
-    -fx-text-fill: rgba(255, 255, 255, 0.7); /* Текст чуть приглушен */
+    -fx-text-fill: rgba(255, 255, 255, 0.7);
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 12 15 12 15;
     -fx-font-size: 14px;
     -fx-font-family: "Segoe UI", sans-serif;
     -fx-cursor: hand;
 
-    /* Граница только снизу, чтобы слегка разделить кнопки */
     -fx-border-color: rgba(255, 255, 255, 0.05);
     -fx-border-width: 0 0 1 0;
 }
 
 .menu-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.1); /* Легкий блик фона */
-    -fx-text-fill: white; /* Текст становится ярким */
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: white;
 
-    /* Акцентная полоса слева при наведении */
-    -fx-border-color: #3498db; /* Синий цвет акцента */
+    -fx-border-color: #3498db;
     -fx-border-width: 0 0 0 4;
 }
 
@@ -26,7 +24,6 @@
     -fx-text-fill: white;
 }
 
-/* Карточка группы команд */
 .admin-card {
     -fx-background-color: white;
     -fx-background-radius: 8;
@@ -35,7 +32,6 @@
     -fx-spacing: 10;
 }
 
-/* Заголовок группы */
 .card-header {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -45,7 +41,6 @@
     -fx-padding: 0 0 10 0;
 }
 
-/* Обычная кнопка действия */
 .admin-action-button {
     -fx-background-color: #3498db;
     -fx-text-fill: white;
@@ -53,7 +48,6 @@
 }
 .admin-action-button:hover { -fx-background-color: #2980b9; }
 
-/* Кнопка удаления (опасная) */
 .admin-danger-button {
     -fx-background-color: transparent;
     -fx-text-fill: #e74c3c;
@@ -66,7 +60,6 @@
     -fx-text-fill: white;
 }
 
-/* Критическая кнопка (сброс всего) */
 .admin-critical-button {
     -fx-background-color: #c0392b;
     -fx-text-fill: white;

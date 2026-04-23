@@ -20,7 +20,7 @@ public class TicketRepositoryImpl extends BaseRepositoryImpl<Ticket, Integer> im
             return em.createQuery(
                             "FROM Ticket t WHERE t.session.id = :sessionId AND t.status = :status", Ticket.class)
                     .setParameter("sessionId", sessionId)
-                    .setParameter("status", TicketStatus.AVAILABLE) // Hibernate сам подставит строку "AVAILABLE"
+                    .setParameter("status", TicketStatus.AVAILABLE)
                     .getResultList();
         } finally {
             em.close();

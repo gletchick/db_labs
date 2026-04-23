@@ -1,7 +1,9 @@
 package org.gletchick.db.service;
 
+import org.gletchick.db.dto.PopularityDTO;
 import org.gletchick.db.model.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -11,6 +13,7 @@ public interface TicketService extends Service<Ticket, Integer> {
 
     void purchaseTicket(Integer ticketId, Client client);
     List<Ticket> findAvailableBySession(Integer sessionId);
-    public void processBooking(Session session, Seat seat, Client client, TicketStatus status);
+    void processBooking(Session session, Seat seat, Client client, TicketStatus status);
     Set<Integer> findOccupiedSeatIdsBySession(Integer sessionId);
+    List<PopularityDTO> getPopularityData(LocalDateTime start, LocalDateTime end);
 }
